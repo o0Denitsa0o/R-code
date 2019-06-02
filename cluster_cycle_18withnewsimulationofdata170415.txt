@@ -1,0 +1,568 @@
+######## Cluster years according to the bio-physical data in the files  <data_dir>XXX_biophy.txt ##############
+make_clusters(biophy_data_dir, res_dir, CLUSTERED_Years) 	# Clustering combinations are stored in <res_dir>XXX_cluster.txt files
+
+######## Dummies for cluster affiliation ###### according to <res_dir>XXX_cluster.txt files ###################
+compose_dummies(res_dir)			#     Stored in <res_dir>XXX_cluster_affiliation_barley.txt
+						#   & <res_dir>XXX_cluster_affiliation_wheat.txt files
+						#   & <res_dir>XXX_cluster_affiliation_both.txt files
+
+
+# beginning of missing code
+################################################################################################################
+if (FALSE) {
+# Load economic data from file
+Data_for_regression  <- as.matrix(read.table(paste0(economy_data_dir, "econdata_exce.txt"), colClasses = "double"))
+
+# Reshift columns of econ data
+# d <- matrix(cbind(Data_for_regression[,1:2], Data_for_regression[,10], Data_for_regression[,3:9]), nrow=36, ncol=10)
+d <- cbind(as.matrix(Data_for_regression[,1:2]), Data_for_regression[,10], as.matrix(Data_for_regression[,3:9]))
+}	# end false
+# Load economic data from file
+# Data_for_regression  <- as.matrix(read.table(paste0(economy_data_dir, "econdata_exce.txt"), colClasses = "double"))
+
+
+# With technical progress (y discounted before data preparation)
+# First three columns
+Data_for_regression1 <- as.matrix(read.table(paste0(economy_data_dir, "Unternehmensertrag.txt"), colClasses = "double"))
+
+#Next
+Data_for_regression2 <- as.matrix(read.table(paste0(economy_data_dir, "econdata_exce.txt"), colClasses = "double"))
+
+# Bind
+Data_for_regression <- cbind(Data_for_regression2[,1:2], Data_for_regression1[,1], Data_for_regression2[,4:10])
+
+# Reshift columns of econ data
+# d <- matrix(cbind(Data_for_regression[,1:2], Data_for_regression[,10], Data_for_regression[,3:9]), nrow=36, ncol=10)
+
+d <- cbind(as.matrix(Data_for_regression[,1:2]), Data_for_regression[,10], as.matrix(Data_for_regression[,3:9]))
+
+################################################################################################################
+
+### Watch it with the unique!!!!! ##### See 'find combination. txt! #####  
+###### See index j, written at the end of the table !!!!!
+
+######### Dummy matrix #########################################################################################
+dbb <- unique(as.matrix(read.table(paste0(res_dir, "Beetzendorf_cluster_affiliation_barley.txt"))))
+dbw <- unique(as.matrix(read.table(paste0(res_dir, "Beetzendorf_cluster_affiliation_wheat.txt"))))
+db2 <- unique(as.matrix(read.table(paste0(res_dir, "Beetzendorf_cluster_affiliation_both.txt"))))
+dmb <- unique(as.matrix(read.table(paste0(res_dir, "Magdeburg_cluster_affiliation_barley.txt"))))
+dmw <- unique(as.matrix(read.table(paste0(res_dir, "Magdeburg_cluster_affiliation_wheat.txt"))))
+dm2 <- unique(as.matrix(read.table(paste0(res_dir, "Magdeburg_cluster_affiliation_both.txt"))))
+dgb <- unique(as.matrix(read.table(paste0(res_dir, "Gadegast_cluster_affiliation_barley.txt"))))
+dgw <- unique(as.matrix(read.table(paste0(res_dir, "Gadegast_cluster_affiliation_wheat.txt"))))
+dg2 <- unique(as.matrix(read.table(paste0(res_dir, "Gadegast_cluster_affiliation_both.txt"))))
+
+################################################################################################################
+
+remove_files(c(paste0(res_dir, "R1_barley_muhat.txt"),paste0(res_dir, "R1_barley_muhat.txt"),paste0(res_dir, "R1_barley_muhat.txt")))
+remove_files(c(paste0(res_dir, "R1_barley_sigmahat.txt"),paste0(res_dir, "R1_barley_sigmahat.txt"),paste0(res_dir, "R1_barley_sigmahat.txt")))
+
+remove_files(c(paste0(res_dir, "R1_wheat_muhat.txt"),paste0(res_dir, "R1_wheat_muhat.txt"),paste0(res_dir, "R1_wheat_muhat.txt")))
+remove_files(c(paste0(res_dir, "R1_wheat_sigmahat.txt"),paste0(res_dir, "R1_wheat_sigmahat.txt"),paste0(res_dir, "R1_wheat_sigmahat.txt")))
+
+remove_files(c(paste0(res_dir, "R1_both_muhat.txt"),paste0(res_dir, "RR1_both_muhat.txt"),paste0(res_dir, "R1_both_muhat.txt")))
+remove_files(c(paste0(res_dir, "R1_both_sigmahat.txt"),paste0(res_dir, "R1_both_sigmahat.txt"),paste0(res_dir, "R1_both_sigmahat.txt")))
+
+remove_files(c(paste0(res_dir, "R2_barley_muhat.txt"),paste0(res_dir, "R2_barley_muhat.txt"),paste0(res_dir, "R2_barley_muhat.txt")))
+remove_files(c(paste0(res_dir, "R2_barley_sigmahat.txt"),paste0(res_dir, "R2_barley_sigmahat.txt"),paste0(res_dir, "R2_barley_sigmahat.txt")))
+
+remove_files(c(paste0(res_dir, "R2_wheat_muhat.txt"),paste0(res_dir, "R2_wheat_muhat.txt"),paste0(res_dir, "R2_wheat_muhat.txt")))
+remove_files(c(paste0(res_dir, "R2_wheat_sigmahat.txt"),paste0(res_dir, "R2_wheat_sigmahat.txt"),paste0(res_dir, "R2_wheat_sigmahat.txt")))
+
+remove_files(c(paste0(res_dir, "R2_both_muhat.txt"),paste0(res_dir, "R2_both_muhat.txt"),paste0(res_dir, "R2_both_muhat.txt")))
+remove_files(c(paste0(res_dir, "R2_both_sigmahat.txt"),paste0(res_dir, "R2_both_sigmahat.txt"),paste0(res_dir, "R2_both_sigmahat.txt")))
+
+remove_files(c(paste0(res_dir, "R3_barley_muhat.txt"),paste0(res_dir, "R3_barley_muhat.txt"),paste0(res_dir, "R3_barley_muhat.txt")))
+remove_files(c(paste0(res_dir, "R3_barley_sigmahat.txt"),paste0(res_dir, "R3_barley_sigmahat.txt"),paste0(res_dir, "R3_barley_sigmahat.txt")))
+
+remove_files(c(paste0(res_dir, "R3_wheat_muhat.txt"),paste0(res_dir, "R3_wheat_muhat.txt"),paste0(res_dir, "R3_wheat_muhat.txt")))
+remove_files(c(paste0(res_dir, "R3_wheat_sigmahat.txt"),paste0(res_dir, "R3_wheat_sigmahat.txt"),paste0(res_dir, "R3_wheat_sigmahat.txt")))
+
+remove_files(c(paste0(res_dir, "R3_both_muhat.txt"),paste0(res_dir, "R3_both_muhat.txt"),paste0(res_dir, "R3_both_muhat.txt")))
+remove_files(c(paste0(res_dir, "R3_both_sigmahat.txt"),paste0(res_dir, "R3_both_sigmahat.txt"),paste0(res_dir, "R3_both_sigmahat.txt")))
+
+################################################################################################################
+
+write( paste0("\n======",Sys.time()), file = paste0(res_dir, "Problems_normal_density.txt"), append = TRUE)
+
+# code
+Number_agents = 30
+############################################################################################
+#Altmarke  
+remove_files(c(paste0(res_dir, "Simulated_data_Altmark_barley_state.txt"),paste0(res_dir, "Simulated_data_Altmark_wheat_state.txt"),paste0(res_dir, "Simulated_data_Altmark_blank_state.txt")))
+sample_matrix <- d[1:12,4:10]
+
+#-------- barley state 
+dbb <- unique(dbb)
+caseName = "R1_barley"
+
+for (i in 1:nrow(dbb))
+{m <- CalIssuesAndPrepareMuhatSigmahat(i, dbb[i,], sample_matrix, caseName)
+
+if (m > 0) {#Generate 30 observations for Altmark, barley state
+genData <- mvrnorm(n = m * Number_agents, GetMu(caseName), GetSigma(caseName))
+j <- rep(i,nrow(genData))
+genData1 <- cbind(genData, j)
+write.table(genData1, file = paste0(res_dir, "Simulated_data_Altmark_barley_state.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+}}
+
+#-------- wheat state
+dbw <- unique(dbw)
+caseName = "R1_wheat"
+
+for (i in 1:nrow(dbw))
+{m <- CalIssuesAndPrepareMuhatSigmahat(i, dbw[i,], sample_matrix, caseName)
+
+if (m > 0) {#Generate 30 observations for Altmark, barley state
+#genData <- mvrnorm(n = m * Number_agents, GetMu(caseName), GetSigma(caseName))
+genData <- genSimulationData(n = m * Number_agents, GetMu(caseName), GetSigma(caseName), sample_matrix,i)
+j <- rep(i,nrow(genData))
+genData1 <- cbind(genData, j)
+write.table(genData1, file = paste0(res_dir, "Simulated_data_Altmark_wheat_state.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+}}
+
+#-------- blank state
+db2 <- unique(db2)
+caseName = "R1_blank"
+
+for (i in 1:nrow(db2))
+{m <- CalIssuesAndPrepareMuhatSigmahat(i, db2[i,], sample_matrix, caseName)
+
+if (m > 0) {#Generate 30 observations for Altmark, barley state
+#genData <- mvrnorm(n = m * Number_agents, GetMu(caseName), GetSigma(caseName))
+genData <- genSimulationData(n = m * Number_agents, GetMu(caseName), GetSigma(caseName), sample_matrix,i)
+j <- rep(i,nrow(genData))
+genData1 <- cbind(genData, j)
+write.table(genData1, file = paste0(res_dir, "Simulated_data_Altmark_blank_state.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+}}
+
+############################################################################################
+#Schwarzerde
+remove_files(c(paste0(res_dir, "Simulated_data_Schwarzerde_barley_state.txt"),paste0(res_dir, "Simulated_data_Schwarzerde_wheat_state.txt"),paste0(res_dir, "Simulated_data_Schwarzerde_blank_state.txt")))
+sample_matrix <- d[13:24,4:10]
+
+#-------- barley state 
+dmb <- unique(dmb)
+caseName = "R2_barley"
+
+for (i in 1:nrow(dmb))
+{m <- CalIssuesAndPrepareMuhatSigmahat(i, dmb[i,], sample_matrix, caseName)
+
+if (m > 0) {#Generate 30 observations for Schwarzerde, barley state
+#genData <- mvrnorm(n = m * Number_agents, GetMu(caseName), GetSigma(caseName))
+genData <- genSimulationData(n = m * Number_agents, GetMu(caseName), GetSigma(caseName), sample_matrix,i)
+j <- rep(i,nrow(genData))
+genData1 <- cbind(genData, j)
+write.table(genData1, file = paste0(res_dir, "Simulated_data_Schwarzerde_barley_state.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+}}
+
+#-------- wheat state
+dmw <- unique(dmw)
+caseName = "R2_wheat"
+
+for (i in 1:nrow(dmw))
+{m <- CalIssuesAndPrepareMuhatSigmahat(i, dmw[i,], sample_matrix, caseName)
+
+if (m > 0) {#Generate 30 observations for Schwarzerde, barley state
+#genData <- mvrnorm(n = m * Number_agents, GetMu(caseName), GetSigma(caseName))
+genData <- genSimulationData(n = m * Number_agents, GetMu(caseName), GetSigma(caseName), sample_matrix,i)
+j <- rep(i,nrow(genData))
+genData1 <- cbind(genData, j)
+write.table(genData1, file = paste0(res_dir, "Simulated_data_Schwarzerde_wheat_state.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+}}
+
+#-------- blank state
+dm2 <- unique(dm2)
+caseName = "R2_blank"
+
+for (i in 1:nrow(dm2))
+{m <- CalIssuesAndPrepareMuhatSigmahat(i, dm2[i,], sample_matrix, caseName)
+
+if (m > 0) {#Generate 30 observations for Schwarzerde, barley state
+#genData <- mvrnorm(n = m * Number_agents, GetMu(caseName), GetSigma(caseName))
+genData <- genSimulationData(n = m * Number_agents, GetMu(caseName), GetSigma(caseName), sample_matrix,i)
+j <- rep(i,nrow(genData))
+genData1 <- cbind(genData, j)
+write.table(genData1, file = paste0(res_dir, "Simulated_data_Schwarzerde_blank_state.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+}}
+
+############################################################################################
+#Heiden
+remove_files(c(paste0(res_dir, "Simulated_data_Heiden_barley_state.txt"),paste0(res_dir, "Simulated_data_Heiden_wheat_state.txt"),paste0(res_dir, "Simulated_data_Heiden_blank_state.txt")))
+sample_matrix <- d[25:36,4:10]
+
+#-------- barley state 
+dgb <- unique(dgb)
+caseName = "R3_barley"
+
+for (i in 1:nrow(dgb))
+{m <- CalIssuesAndPrepareMuhatSigmahat(i, dgb[i,], sample_matrix, caseName)
+
+if (m > 0) {#Generate 30 observations for Heiden, barley state
+#genData <- mvrnorm(n = m * Number_agents, GetMu(caseName), GetSigma(caseName))
+genData <- genSimulationData(n = m * Number_agents, GetMu(caseName), GetSigma(caseName), sample_matrix,i)
+j <- rep(i,nrow(genData))
+genData1 <- cbind(genData, j)
+write.table(genData1, file = paste0(res_dir, "Simulated_data_Heiden_barley_state.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+}}
+
+#-------- wheat state
+dgw <- unique(dgw)
+caseName = "R3_wheat"
+
+for (i in 1:nrow(dgw))
+{m <- CalIssuesAndPrepareMuhatSigmahat(i, dgw[i,], sample_matrix, caseName)
+
+if (m > 0) {#Generate 30 observations for Heiden, wheat state
+#genData <- mvrnorm(n = m * Number_agents, GetMu(caseName), GetSigma(caseName))
+genData <- genSimulationData(n = m * Number_agents, GetMu(caseName), GetSigma(caseName), sample_matrix,i)
+j <- rep(i,nrow(genData))
+genData1 <- cbind(genData, j)
+write.table(genData1, file = paste0(res_dir, "Simulated_data_Heiden_wheat_state.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+}}
+
+#-------- blank state
+dg2 <- unique(dg2)
+caseName = "R3_blank"
+
+for (i in 1:nrow(dg2))
+{m <- CalIssuesAndPrepareMuhatSigmahat(i, dg2[i,], sample_matrix, caseName)
+
+if (m > 0) {#Generate 30 observations for Heiden, blank state
+#genData <- mvrnorm(n = m * Number_agents, GetMu(caseName), GetSigma(caseName))
+genData <- genSimulationData(n = m * Number_agents, GetMu(caseName), GetSigma(caseName), sample_matrix,i)
+j <- rep(i,nrow(genData))
+genData1 <- cbind(genData, j)
+write.table(genData1, file = paste0(res_dir, "Simulated_data_Heiden_blank_state.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+}}
+# end of missing code
+
+# Compose possible cluster combinations between stations  
+
+# Code in utility 3
+######## Beetzendorf
+comb_array_b <- CalCombinations(
+	as.matrix(read.table(paste0(res_dir, "Beetzendorf_cluster_affiliation_barley.txt"))),
+	as.matrix(read.table(paste0(res_dir, "Beetzendorf_cluster_affiliation_wheat.txt"))),
+	as.matrix(read.table(paste0(res_dir, "Beetzendorf_cluster_affiliation_both.txt"))))
+
+######### Madgeburg
+comb_array_m <- CalCombinations(
+	as.matrix(read.table(paste0(res_dir, "Magdeburg_cluster_affiliation_barley.txt"))),
+	as.matrix(read.table(paste0(res_dir, "Magdeburg_cluster_affiliation_wheat.txt"))),
+	as.matrix(read.table(paste0(res_dir, "Magdeburg_cluster_affiliation_both.txt"))))
+
+########## Gadegast
+comb_array_g <- CalCombinations(
+	as.matrix(read.table(paste0(res_dir, "Gadegast_cluster_affiliation_barley.txt"))),
+	as.matrix(read.table(paste0(res_dir, "Gadegast_cluster_affiliation_wheat.txt"))),
+	as.matrix(read.table(paste0(res_dir, "Gadegast_cluster_affiliation_both.txt"))))
+
+# Load simulated data from files
+
+Simulated_data_R1_barley  <- as.matrix(read.table(paste0(res_dir, "Simulated_data_Altmark_barley_state.txt"), colClasses = "double"))
+Simulated_data_R1_wheat  <- as.matrix(read.table(paste0(res_dir, "Simulated_data_Altmark_wheat_state.txt"), colClasses = "double"))
+Simulated_data_R1_blank  <- as.matrix(read.table(paste0(res_dir, "Simulated_data_Altmark_blank_state.txt"), colClasses = "double"))
+Simulated_data_R2_barley  <- as.matrix(read.table(paste0(res_dir, "Simulated_data_Schwarzerde_barley_state.txt"), colClasses = "double"))
+Simulated_data_R2_wheat  <- as.matrix(read.table(paste0(res_dir, "Simulated_data_Schwarzerde_wheat_state.txt"), colClasses = "double"))
+Simulated_data_R2_blank  <- as.matrix(read.table(paste0(res_dir, "Simulated_data_Schwarzerde_blank_state.txt"), colClasses = "double"))
+Simulated_data_R3_barley  <- as.matrix(read.table(paste0(res_dir, "Simulated_data_Heiden_barley_state.txt"), colClasses = "double"))
+Simulated_data_R3_wheat  <- as.matrix(read.table(paste0(res_dir, "Simulated_data_Heiden_wheat_state.txt"), colClasses = "double"))
+Simulated_data_R3_blank  <- as.matrix(read.table(paste0(res_dir, "Simulated_data_Heiden_blank_state.txt"), colClasses = "double"))
+
+#########################################################################################################################################
+
+# Start values
+
+# Did not work:
+# st <- c(t0=8, t1=0.5, d21=1, d31=1, d22=6, d32=3, d23=2, d33=8, g1=2, g2=2.5, g3=4.5, b=1.5, f=1.8)
+
+# Worked for two combinations. Estimated coefficients are used as staring values below
+# st <- c(t0=8, t1=7.5, d21=2.3, d31=1.7, d22=6.2, d32=3, d23=2, d33=8, g1=2.1, g2=2.5, g3=4.5, b=1.5, f=1.8)
+
+# Use the estimated coefficients as starting values (first combination - first, third and fourth combinations worked)
+# st <- c(t0=1.7179, t1=-24.96702, d21=5.65249, d31=11.41351, d22=13.70554, d32=3.36073, d23=11.4037, d33=5.66269, g1=-18.68941, g2=25.63103, g3=1.96178, b=4e-05, f=0.02129)
+
+# Use the estimated coefficients as starting values(second combination - second, third and fourth combinations worded) 
+# st <- c(t0=1.71751, t1=-24.9443, d21=5.84367, d31=10.48747, d22=13.62041, d32=2.71109, d23=11.50339, d33=4.82824, g1=-16.37556, g2=24.51443, g3=1.4776, b=6e-05, f=0.02261)
+
+# Worked again (coefficients b and f are different from the first combination)
+#st <- c(t0=1.7179, t1=-24.96702, d21=5.65249, d31=11.41351, d22=13.70554, d32=3.36073, d23=11.4037, d33=5.66269, g1=-18.68941, g2=25.63103, g3=1.96178, b=0.001, f=0.01)
+
+# Regional dummy (t0 value above / 3)
+#st <- c(t01=0.6, t02=0.6, t03=0.6, t1=-24.96702, d12=5, d13=5, d21=5.65249, d31=11.41351, d22=13.70554, d32=3.36073, d23=11.4037, d33=5.66269, g1=-18.68941, g2=25.63103, g3=1.96178, b=0.001, f=0.01)
+
+# Regional dummy (t0 value above / 9)
+# st <- c(t01=0.2, t02=0.2, t03=0.2, t1=-24.96702, d11=6, d12=2.55, d13=1.55, d21=5.65249, d31=11.41351, d22=13.70554, d32=3.36073, d23=11.4037, d33=15.66269, g1=-18.68941, g2=25.63103, g3=1.96178, b=0.001, f=0.01)
+
+# Regional dummy (Actually converged in 2 cases)
+# st <- c(t01=80, t02=100, t03=40, t1=-24.96702, d11=19, d12=4.25, d13=7.55, d21=5.65249, d31=11.41351, d22=13.62041, d32=2.71109, d23=4.4037, d33=25.66269, g1=-18.68941, g2=25.63103, g3=1.96178, b=4e-05, f=0.02129)
+
+# Regional dummy (Actually converged in 2 cases)
+# st <- c(t01=80, t02=100, t03=40, t1=-24.96702, d11=19, d12=4.25, d13=7.55, d21=5.65249, d31=11.41351, d22=13.62041, d32=2.71109, d23=4.4037, d33=25.66269, g1=-18.68941, g2=25.63103, g3=1.96178, b=4e-05, f=0.02129)
+
+# Regional dummy (Actually converged in 2 cases)
+# st <- c(t01=80, t02=100, t03=40, t1=-24.96702, d11=19, d12=4.25, d13=7.55, d21=6.65249, d31=11.41351, d22=13.62041, d32=2.71109, d23=4.4037, d33=25.66269, g1=-18.68941, g2=25.63103, g3=1.96178, b=4e-05, f=0.02129)
+
+# Regional dummy (Results from above)
+# st <- c(t01=400, t02=800, t03=300, t1=--18.887, d11=0.5, d12=0.5, d13=0.5, d21=0.5, d31=0.5, d22=0.5, d32=0.5, 
+# d23=0.5, d33=0.5, g1=7.7, g2=7.21, g3=8.084, b=2, f=1)
+
+# Startintg values from OLS (No convergence: infinity produced)
+# st <- c(t01=8.95262, t02=9.59130, t03=8.62816, t1=-0.20920, d11=-1.37442, d12=-3.69269, d13=-1.70444, d21=0.61661, d31=0.84925, d22=2.34107, d32=1.98114, 
+# d23=0.86453, d33=1.01872, g1=-0.68044, g2=0.42312, g3=-0.42205, b=1, f=1)
+
+# Starting values from OLS
+st <- c(t01=18.95262, t02=19.59130, t03=18.62816, t1=-0.20920, d11=0.37442, d12=0.0069269, d13=0.070444, d21=0.61661, d31=-0.84925, d22=2.34107, d32=-1.98114, 
+d23=0.86453, d33=-1.01872, g1=-0.68044, g2=0.42312, g3=0.42205, b=0.8, f=1.2)
+
+#remove_files(c(paste0(res_dir, "Prod_coef.txt")))
+
+# Record starting values for estimation in the result file
+
+write.table(paste0("====== ", Sys.time(), " ==================="), file = paste0(res_dir, "Prod_coef.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")	
+#write.table(paste0("With start values"), file = paste0(res_dir, "Prod_coef.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")	
+#write.table(as.matrix(t(st)), file = paste0(res_dir, "Prod_coef.txt"), row.name = FALSE, append = TRUE, sep = "\t")
+
+#for (i in 1:nrow(comb_array_b))
+i = 1
+   
+#{ for (j in 1:nrow(comb_array_m))
+j = 1
+   
+#     { for (k in 1:nrow(comb_array_g))
+k = 1
+
+#       {
+####################################################################################################################################
+
+###################################### ECON DATA #######################################
+
+# Pick up the relevant economic data (relevant economic data depends on the combination)
+# Within transform the data (Substract the mean: soil quality) - nope.
+
+#### Altmark
+
+cNob11 <- comb_array_b[i, 1] 
+TTableR1b <- Simulated_data_R1_barley[Simulated_data_R1_barley[,8] == cNob11,]
+cNob12 <- comb_array_b[i, 2] 
+TTableR1w <- Simulated_data_R1_wheat[Simulated_data_R1_wheat[,8] == cNob12,]
+cNob13 <- comb_array_b[i, 3] 
+TTableR12 <- Simulated_data_R1_blank[Simulated_data_R1_blank[,8] == cNob13,]
+
+# Merge simulated data regionwise (Altmark)
+TTable <- as.matrix(rbind(TTableR1b, TTableR1w, TTableR12))
+
+# Demean data	# Not used because we are need to help along by log() (factor). Dummies for region used.
+
+#Demeaned_sim_data_R1 <- as.matrix(cbind(TTable[,1]-mean(TTable[,1]),
+#TTable[,2]-mean(TTable[,2]), TTable[,3]-mean(TTable[,3]), 
+#TTable[,4]-mean(TTable[,4]), TTable[,5]-mean(TTable[,5]), 
+#TTable[,6]-mean(TTable[,6]), TTable[,7]-mean(TTable[,7]), TTable[,8]))
+
+Demeaned_sim_data_R1 = TTable
+
+#### Schwarzerde
+
+cNob21 <- comb_array_m[j, 1] 
+TTableR2b <- Simulated_data_R2_barley[Simulated_data_R2_barley[,8] == cNob21,]
+cNob22 <- comb_array_m[j, 2] 
+TTableR2w <- Simulated_data_R2_wheat[Simulated_data_R2_wheat[,8] == cNob22,]
+cNob23 <- comb_array_m[j, 3] 
+TTableR22 <- Simulated_data_R2_blank[Simulated_data_R2_blank[,8] == cNob23,]
+
+# Merge simulated data regionwise (Schwarzerde)
+TTable <- as.matrix(rbind(TTableR2b, TTableR2w, TTableR22))
+
+# Demean data	# Not used because we are need to help along by log() (factor). Dummies for region used.
+
+#Demeaned_sim_data_R2 <- as.matrix(cbind(TTable[,1]-mean(TTable[,1]),
+#TTable[,2]-mean(TTable[,2]), TTable[,3]-mean(TTable[,3]), 
+#TTable[,4]-mean(TTable[,4]), TTable[,5]-mean(TTable[,5]), 
+#TTable[,6]-mean(TTable[,6]), TTable[,7]-mean(TTable[,7]), TTable[,8]))
+
+Demeaned_sim_data_R2 = TTable
+
+#### Heiden
+
+cNob31 <- comb_array_g[k, 1] 
+TTableR3b <- Simulated_data_R3_barley[Simulated_data_R3_barley[,8] == cNob31,]
+cNob32 <- comb_array_g[k, 2] 
+TTableR3w <- Simulated_data_R3_wheat[Simulated_data_R3_wheat[,8] == cNob32,]
+cNob33 <- comb_array_g[k, 3] 
+TTableR32 <- Simulated_data_R3_blank[Simulated_data_R3_blank[,8] == cNob33,]
+
+# Merge simulated data regionwise (Heiden)
+TTable <- as.matrix(rbind(TTableR3b, TTableR3w, TTableR32))
+
+# Demean data	# Not used because we are need to help along by log() (factor). Dummies for region used.
+
+
+#Demeaned_sim_data_R3 <- as.matrix(cbind(TTable[,1]-mean(TTable[,1]),
+#TTable[,2]-mean(TTable[,2]), TTable[,3]-mean(TTable[,3]), 
+#TTable[,4]-mean(TTable[,4]), TTable[,5]-mean(TTable[,5]), 
+#TTable[,6]-mean(TTable[,6]), TTable[,7]-mean(TTable[,7]), TTable[,8]))
+
+Demeaned_sim_data_R3 = TTable
+
+# Unify the demeaned simulated data for the three regions
+
+Demeaned_simulated_data <- rbind(Demeaned_sim_data_R1, Demeaned_sim_data_R2, Demeaned_sim_data_R3)
+
+
+###################################### STATE DUMMIES ######################
+
+# Create a matrix of state dummies for a specific clustering combination.
+
+#Where is the combination index?
+k1= ncol(Simulated_data_R1_barley)
+
+nrR1b <- nrow(Simulated_data_R1_barley[which(Simulated_data_R1_barley[,k1] == comb_array_b[i,1]),])
+nrR1w <- nrow(Simulated_data_R1_wheat[which(Simulated_data_R1_wheat[,k1] == comb_array_b[i,2]),])
+nrR12 <- nrow(Simulated_data_R1_blank[which(Simulated_data_R1_blank[,k1] == comb_array_b[i,3]),])
+
+nrR2b <- nrow(Simulated_data_R2_barley[which(Simulated_data_R2_barley[,k1] == comb_array_m[j,1]),])
+nrR2w <- nrow(Simulated_data_R2_wheat[which(Simulated_data_R2_wheat[,k1] == comb_array_m[j,2]),])
+nrR22 <- nrow(Simulated_data_R2_blank[which(Simulated_data_R2_blank[,k1] == comb_array_m[j,3]),])
+
+nrR3b <- nrow(Simulated_data_R3_barley[which(Simulated_data_R3_barley[,k1] == comb_array_g[k,1]),])
+nrR3w <- nrow(Simulated_data_R3_wheat[which(Simulated_data_R3_wheat[,k1] == comb_array_g[k,2]),])
+nrR32 <- nrow(Simulated_data_R3_blank[which(Simulated_data_R3_blank[,k1] == comb_array_g[k,3]),])
+
+Dummy_temp_R1_barley <- t(rbind(rep(1,nrR1b), rep(0, nrR1b), rep(0, nrR1b)))
+Dummy_temp_R1_wheat <- t(rbind(rep(0,nrR1w), rep(1,nrR1w), rep(0,nrR1w)))
+Dummy_temp_R1_blank <- t (rbind(rep(0,nrR12), rep(0,nrR12), rep(1,nrR12)))
+
+Dummy_temp_R2_barley <- t(rbind(rep(1,nrR2b), rep(0, nrR2b), rep(0, nrR2b)))
+Dummy_temp_R2_wheat <- t(rbind(rep(0,nrR2w), rep(1,nrR2w), rep(0,nrR2w)))
+Dummy_temp_R2_blank <- t (rbind(rep(0,nrR22), rep(0,nrR22), rep(1,nrR22)))
+
+Dummy_temp_R3_barley <- t(rbind(rep(1,nrR3b), rep(0, nrR3b), rep(0, nrR3b)))
+Dummy_temp_R3_wheat <- t(rbind(rep(0,nrR3w), rep(1,nrR3w), rep(0,nrR3w)))
+Dummy_temp_R3_blank <- t(rbind(rep(0,nrR32), rep(0,nrR32), rep(1,nrR32)))
+
+Dummy_temp_R1 <- rbind(Dummy_temp_R1_barley, Dummy_temp_R1_wheat, Dummy_temp_R1_blank)
+Dummy_temp_R2 <- rbind(Dummy_temp_R2_barley, Dummy_temp_R2_wheat, Dummy_temp_R2_blank)
+Dummy_temp_R3 <- rbind(Dummy_temp_R3_barley, Dummy_temp_R3_wheat, Dummy_temp_R3_blank)
+
+Dummy_temp <- rbind(Dummy_temp_R1, Dummy_temp_R2, Dummy_temp_R3)
+
+###################################### REGION DUMMIES ######################
+
+r1 <- c(rep(1, 360), rep(0, 720))
+r2 <- c(rep(0, 360), rep(1, 360), rep(0, 360))
+r3 <- c(rep(0, 720), rep(1, 360))
+
+RDummy <- cbind(r1, r2, r3)
+
+###########################################
+
+# Sum up the land devoted to wheat and barley production
+Land_blank_state <- cbind(Demeaned_simulated_data[,6], Demeaned_simulated_data[,7])
+
+# Pick up the simulated data for regression (as a matrix)
+d <- matrix(cbind(Demeaned_simulated_data[,1:2], Dummy_temp, Demeaned_simulated_data[,3:8], RDummy, Land_blank_state), nrow= nrow(Demeaned_simulated_data))
+
+# Set the data as a data frame
+d7 <- as.data.frame(d)
+
+############# not used - test options
+if (FALSE) {
+# try(NLS regression)
+
+startgrid <- expand.grid(t0 = seq(0, 1.5, by = 0.5),
+t1 = seq(0, 1, by = 0.5), 
+b = seq(0.1, 2, by = 0.5),
+d21 = seq(0, 1, by = 0.5),
+d22 = seq(0, 1, by = 0.5),
+d23 = seq(0, 1, by = 0.5),
+d31 = seq(0, 1, by = 0.5),
+d32 = seq(0, 1, by = 0.5),
+d33 = seq(0, 1, by = 0.5),
+g1 = seq(0, 1, by = 0.5),
+g2 = seq(0, 1, by = 0.5),
+g3 = seq(0, 1, by = 0.5),
+f = seq(0.1, 2, by = 0.5))
+
+#zz <- try(nls2(V1 ~  t0*(t1*V2^b + d21*V5*V7^b + d31*V5*V6^b + d22*V3*V7^b + d32*V3*V6^b + d23*V4*V7^b + d33*V4*V6^b 
+#+ g1*V8^b + g2*V9^b + g3*V10^b)^(f/b), data = d7, start = startgrid, algorithm = c("random-search")))
+
+#zz <- try(nls2(V1 ~  t0*(t1*V2^b + d21*V5*V7^b + d31*V5*V6^b + d22*V3*V7^b + d32*V3*V6^b + d23*V4*V7^b + d33*V4*V6^b 
+#+ g1*V8^b + g2*V9^b + g3*V10^b)^(f/b), data = d7, start = startgrid, algorithm = c("random-search")))
+
+#zz <- try(nlsLM(V1 ~ t0*(t1*V2^b + d21*V5*V7^b + d31*V5*V6^b + d22*V3*V7^b + d32*V3*V6^b + d23*V4*V7^b + d33*V4*V6^b 
+#+ g1*V8^b + g2*V9^b + g3*V10^b)^(f/b), data = d7, start = st,
+#control = nls.lm.control(maxiter = 1024, maxfev = 100000)), silent = FALSE)
+
+#zz <- try(nls2(V1 ~  t0*(t1*V2^b + d21*V5*V7^b + d31*V5*V6^b + d22*V3*V7^b + d32*V3*V6^b + d23*V4*V7^b + d33*V4*V6^b 
+#+ g1*V8^b + g2*V9^b + g3*V10^b)^(f/b), data = d7, start = startgrid, algorithm = c("random-search")))
+
+#zz <- try(nls2(log(V1) ~ log(t0) + (f/b)*log(t1*V2^b + d21*V5*V7^b + d31*V5*V6^b + d22*V3*V7^b + d32*V3*V6^b + d23*V4*V7^b + d33*V4*V6^b + g1*V8^b + g2*V9^b + g3*V10^b), 
+#data = d7, start = startgrid, algorithm = c("default")), silent = FALSE)
+}		
+############# not used - test options (end)
+
+# Regression
+#zz <- try(nlsLM(log(V1) ~ log(V12*t01 + V13*t02 + V14*t03) + (f/b)*log(t1*V2^b + d21*V5*V7^b + d31*V5*V6^b + d22*V3*V7^b + d32*V3*V6^b 
+#+ d23*V4*V7^b + d33*V4*V6^b + g1*V8^b + g2*V9^b + g3*V10^b), data = d7, start = st,
+#control = nls.lm.control(maxiter = 1024, maxfev = 100000)), silent = FALSE)
+
+#zz <- try(nlsLM(log(V1) ~ V12*t01 + V13*t02 + V14*t03 + (f/b)*log(t1*V2^b + d21*V5*V7^b + d31*V5*V6^b + d22*V3*V7^b + d32*V3*V6^b 
+#+ d23*V4*V7^b + d33*V4*V6^b + g1*V8^b + g2*V9^b + g3*V10^b), data = d7, start = st,
+#control = nls.lm.control(maxiter = 1024, maxfev = 100000)), silent = FALSE)
+
+# The one with the d12 dummies
+
+#zz <- try(nlsLM(log(V1) ~ V12*t01 + V13*t02 + V14*t03 + (f/b)*log(d11*V5*V15^b + d12*V3*V15^b + d13*V4*V15^b
+#+d21*V5*V7^b + d31*V5*V6^b + d22*V3*V7^b + d32*V3*V6^b + d23*V4*V7^b + d33*V4*V6^b + g1*V8^b + g2*V9^b + g3*V10^b), 
+#data = d7, start = st, control = nls.lm.control(maxiter = 1024, maxfev = 100000)), silent = FALSE)
+
+# The one with the d12 dummies
+
+#zz <- try(nlsLM(log(V1) ~ (-1/b)*log(V12*t01 + V13*t02 + V14*t03) + (f/b)*log(t1*V2^b + d11*V5*V15^b + d12*V3*V15^b + d13*V4*V15^b
+#+d21*V5*V7^b + d31*V5*V6^b + d22*V3*V7^b + d32*V3*V6^b + d23*V4*V7^b + d33*V4*V6^b + g1*V8^b + g2*V9^b + g3*V10^b), 
+#data = d7, start = st, control = nls.lm.control(maxiter = 1024, maxfev = 100000)), silent = FALSE)
+
+#zz <- try(lm(log(V1) ~ V14 + V13 + log(V2) + V3:log(V6 + V7) + 
+#  V4:log(V6 + V7) + V5:log(V6 + V7) + V3:log(V6) + V4:log(V6) + 
+#              V5:log(V6) + V3:log(V7) + V4:log(V7) + V5:log(V7) + log(V8) + 
+#              log(V9) + log(V10), data = d7), silent = FALSE)
+#d8 <- d7
+#d8[,10] <- d8[,10] / 1000
+#d8[,9] <- d8[,9] / 100000
+#d8[,8] <- d8[,8] 
+zz <- try(lm(log(V1) ~  0 + V3 + V4 + V5 + V3:log(V6) + V4:log(V6) + 
+              V5:log(V6) + V3:log(V7) + V4:log(V7) + V5:log(V7) + log(V2+V6+V7) + 
+              log(V8)  + log(V10), data = d7), silent = FALSE)
+
+
+# If there is a problem -> record "Problem"
+
+combination_index = paste0("combination ", i, " ", j, " ", k)
+write.table(d7, file = paste0(res_dir, combination_index, "data.txt"), sep = "\t")
+
+if ("try-error" %in% class(zz)) { 
+write( paste0(combination_index, " Problem ", geterrmessage()), file= paste0(res_dir, "Prod_coef.txt"), append = TRUE)
+} else {	res <- sum(t(residuals(zz))*residuals(zz))
+	Prod_coef <- as.table(rbind(c(res, coef(zz))))
+	Prod_coef <- zapsmall(Prod_coef, digits = 6)
+	colnames(Prod_coef)[1] = "rss"
+write( " ===== ", file= paste0(res_dir, "Prod_coef.txt"), append = TRUE)
+	write.table(combination_index, file = paste0(res_dir, "Prod_coef.txt"), 
+             row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+#	write.table(Prod_coef, file = paste0(res_dir, "Prod_coef.txt"), row.name = FALSE, append = TRUE, sep = "\t")	
+
+# IF YOU prefer column - comment previous line and uncomment the next two
+Prod_coef <- t(Prod_coef)
+write.table(Prod_coef, file = paste0(res_dir, "Prod_coef.txt"),col.name = FALSE,append = TRUE, sep = "\t")
+
+}
+summary(zz)
+#      }    # end loop k
+#   }    # end loop j
+#}    # end loop i
+	
+zz <- lm(formula = log(V1) ~ 0 + log(V2+V6+V7) + V3:log(V6/(V2+V6+V7)) + V4:log(V6/(V2+V6+V7)) + 
++ V5:log(V6/(V2+V6+V7)) + V3:log(V7/(V2+V6+V7)) + V4:log(V7/(V2+V6+V7)) + V5:log(V7/(V2+V6+V7)) + log(V8) + log(V9) + log(V10), data = d7)
+
+summary(zz)

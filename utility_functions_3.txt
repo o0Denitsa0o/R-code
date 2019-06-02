@@ -1,0 +1,152 @@
+#########  Functions 
+#	CalIssuesAndPrepareMuhatSigmahat <- function(combinationN0, cluster_vector, sample_maxtrix, filename)
+#	GetMu <- function(filename)
+#	GetSigma <- function(filename)
+#	Denitsa_mlest <- function (data, eps1 = 1000000000, ...) 
+#	genSimulationData <- function (n, muhat, sigmaha, sample_matrix, m)
+# ----------------------------------------------------------------------------------
+CalIssuesAndPrepareMuhatSigmahat <- function(combinationN0, cluster_vector, sample_maxtrix, filename)
+{
+c <- cluster_vector[ cluster_vector==1]
+m <- length(c)
+
+### + 19.02.15	-	only one year in the cluster
+if (m == 1)
+{write( paste0(combinationN0," Problem ", filename, " only one year in the cluster"), file = paste0(res_dir, "Problems_normal_density.txt"), append = TRUE)
+return(0)
+}
+### - 19.02.15
+
+data_Region <- sample_maxtrix[which(cluster_vector %in% c(1)),]
+mle_R <- try(Denitsa_mlest(data_Region), silent=TRUE)
+#mle_R <- try(mlest(data_Region), silent=TRUE)
+
+if ('try-error' %in% class(mle_R)) {
+ 	write( paste0(combinationN0," Problem ", filename, " ",geterrmessage()), file = paste0(res_dir, "Problems_normal_density.txt"), append = TRUE)
+	m <- 0
+} else
+{
+	R_muhat <- as.table(mle_R[[1]])
+	write.table(R_muhat, file = paste0(res_dir, filename, "_muhat.txt"))
+	R_sigmahat <- as.table(mle_R[[2]])
+	write.table(R_sigmahat, file = paste0(res_dir, filename, "_sigmahat.txt"))
+}
+return(m)
+}
+
+# ----------------------------------------------------------------------------------
+GetMu <- function(filename)
+{
+#setting the mean vector
+premu <- as.matrix(read.table(paste0(res_dir, filename, "_muhat.txt")))
+mu <- as.double(premu[,2])
+return(mu)
+}
+
+# ----------------------------------------------------------------------------------
+GetSigma <- function(filename)
+{
+#Variance-covariance matrix
+presigma <- as.matrix(read.table(paste0(res_dir, filename, "_sigmahat.txt")))
+return(presigma)
+}
+
+# ----------------------------------------------------------------------------------
+Denitsa_mlest <- function (data, eps1 = 100000000000, ...) 
+{
+    data <- as.matrix(data)
+    sortlist <- mysort(data)
+    nvars <- ncol(data)
+    nobs <- nrow(data)
+    if (nvars > 50) 
+        stop("mlest cannot handle more than 50 variables.")
+eps2 = 0.001
+ while (eps1 > eps2)
+{
+   startvals <- try(getstartvals(data, eps = eps2), silent=TRUE)
+if ('try-error' %in% class(startvals)) {eps2 = eps2 * 10 
+# 	write( paste0(" next ", eps2), file = paste0(res_dir, "Problems_normal_density.txt"), append = TRUE)
+} else {break
+ 	write( paste0(" break ", eps2), file = paste0(res_dir, "Problems_normal_density.txt"), append = TRUE)
+}
+}
+    lf <- getclf(data = sortlist$sorted.data, freq = sortlist$freq)
+    mle <- nlm(lf, startvals, ...)
+    muhat <- mle$estimate[1:nvars]
+    del <- make.del(mle$estimate[-(1:nvars)])
+    factor <- solve(del, diag(nvars))
+    sigmahat <- t(factor) %*% factor
+    list(muhat = muhat, sigmahat = sigmahat, value = mle$minimum, 
+        gradient = mle$gradient, stop.code = mle$code, iterations = mle$iterations)
+}
+
+# ----------------------------------------------------------------------------------
+### + 10.04.15	-	drow from truncated distribution
+
+genSimulationData <- function (n, muhat, sigmaha, sample_matrix, m)
+{
+   n0 = n						# number of needed samples
+   genData0 <- as.matrix(t(double(length(muhat))))	# matrix to store data 
+   aMinValues <- apply(sample_matrix,2,min) * 0.8	# low values
+   aMaxValues <- apply(sample_matrix,2,max) * 1.2	# high values
+
+#   aMinValues <- apply(sample_matrix,2,min)	# low values
+#   aMaxValues <- apply(sample_matrix,2,max)	# high values
+
+# aMinValues[6] <- muhat[6] * 0.009
+# aMaxValues[6] <- muhat[6] * 0.0095
+
+#aMinValues[7] <- muhat[7] * 0.009
+#aMaxValues[7] <- muhat[7] * 1.001
+
+
+
+iter = 0 	# for test information only
+
+  while (nrow(genData0) < n0+1)
+   {  n1 = n0+1 - nrow(genData0)			# how many needed more
+#      genData <- mvrnorm(n1, muhat, sigmaha)
+      genData <- rtmvnorm(n=n1, mean= muhat, lower = aMinValues, upper=aMaxValues, algorithm="gibbs")
+ #, sigma = sigmaha
+     if (! is.matrix(genData)) genData <- as.matrix(t(genData))
+      for ( i in 1:nrow(genData))
+      {   if (all(genData[i,] >=  aMinValues) && all(genData[i,] <= aMaxValues)) 
+              genData0 <- rbind(genData0, genData[i,])}
+
+if (iter >= 1000000) break
+#if (iter >= 100000000) break
+iter = iter + 1
+   }   
+
+write( paste0(iter," iter ---gen: ",nrow(genData0)-1,"-- needed: ",n, " ", caseName, " ", m), file = paste0(res_dir, "Problems_normal_density.txt"), append = TRUE)
+
+   genData0 <- genData0[2:nrow(genData0),] 
+   genData0
+}
+
+### - 19.02.15
+
+# ----------------------------------------------------------------------------------
+CalCombinations <- function(cl_b_g, cl_w_g, cl_2_g)
+{
+d_b <- unique(cl_b_g); d_w <- unique(cl_w_g); d_2 <- unique(cl_2_g)
+d__g <- t(unique(cbind(cl_b_g, cl_w_g, cl_2_g)))
+comb_array <- c(0,0,0)
+for (i in 1:nrow(d_b))
+{	for (j in 1:nrow(d_w))
+	{	for (k in 1:nrow(d_2))
+		{	if (sum(d_b[i,]) > 1 && sum(d_w[j,]) > 1 && sum(d_2[k,]) > 1)
+			{ combination <- t(cbind(t(d_b[i,]),t(d_w[j,]),t(d_2[k,])))
+			  for (l in 1:ncol(d__g))
+			  { if (sum(d__g[,l] == combination) == nrow(d__g))
+				{comb_array <- rbind(comb_array, c(i,j,k))}
+			  }
+			}
+		}
+	}
+}
+comb_array <- comb_array[2:nrow(comb_array),]
+if ( ! is.matrix(comb_array)) comb_array <- as.matrix(t(comb_array))  
+comb_array
+}
+#########  End Functions 

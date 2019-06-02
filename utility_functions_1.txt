@@ -1,0 +1,240 @@
+# utility functions - to avoid rewriting identical pieces of program
+
+###	unify_clusters	######################################
+unify_clusters <- function(centers,clusters_vector)
+{
+  v1 <- clusters_vector	# define result vector of clustering
+
+  ii<-order(centers)	# reorder centers
+
+  decode_v = 1:2		# prepare decoding vector
+# next assigning values correspond to states of nature  
+  decode_v[ii[2]] = 2	# biggest (barley)
+  decode_v[ii[1]] = 3	# smallest (wheat)
+
+# decode each element of clusters_vector one by one
+  for (i in 1:length(clusters_vector)) 	
+    {v1[i] <- decode_v[clusters_vector[i]]}
+
+  return(v1)		# return result
+}	### end of unify_clusters
+
+
+###	remove_files	######################################
+remove_files <- function(files)
+{
+  for (file in files)
+  {
+    if (file.exists(file)) 
+    {
+      file.remove(file)
+    }
+  }
+}	### end of remove_files
+
+####################################	Preclusters	######################
+make_clusters <- function(data_dir, res_dir, nYears = CLUSTERED_Years)
+{
+# folders - vatiables are used to skip typing the whole path to files and easy change the program
+# folders (directories) MUST exist ! (create folder if missing)
+# nYears = CLUSTERED_Years	# default number years to clustering
+
+
+# Load data from external files
+# function paste0 is used to compose the file name (full path - directory & file)
+
+  FldData <- read.table(paste0(data_dir, "Beetzendorf_biophys.txt"))
+  b_Beetzendorf <- FldData[,1]
+
+  FldData <- read.table(paste0(data_dir, "Gadegast_biophys.txt"))
+  b_Gadegast <- FldData[,1]
+
+  FldData <- read.table(paste0(data_dir, "Magdeburg_biophys.txt"))
+  b_Magdeburg <- FldData[,1]
+
+
+# Remove the result files if any 
+  remove_files( c(paste0(res_dir, "Beetzendorf_cluster.txt"), 
+		paste0(res_dir, "Gadegast_cluster.txt"),
+		paste0(res_dir, "Magdeburg_cluster.txt")))
+
+
+############################################ Clusters ######################
+
+# Compose permutation of 2 item from nYears elements set
+
+  for (i in 1:nYears) 
+      { for (k in 1:nYears) 
+        { if (!(k == i))
+
+# for each permutation clustering any set of data
+          { a <- b_Beetzendorf
+            a_centers <- c(a[i],a[k])	# initial centers accorning current permutation
+            if (length(unique(a_centers)) == 2)	# the centers must be different
+            { b <- kmeans(a, a_centers)		# Find clusters
+              ii <- order(b$centers) 
+# Store clusters into file 
+             write.table(rbind(c( c(i,k), b$centers[ii], unify_clusters(b$centers,b$cluster))), 
+                         file = paste0(res_dir, "Beetzendorf_cluster.txt"), 
+                         row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+            }
+
+            a <- b_Gadegast 
+            a_centers <- c(a[i],a[k])  
+            if (length(unique(a_centers)) == 2)
+            { b <- kmeans(a, a_centers)
+              ii <- order(b$centers) 
+              write.table(rbind(c(c(i,k),b$centers[ii], unify_clusters(b$centers,b$cluster))), file = paste0(res_dir, "Gadegast_cluster.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+            }
+
+            a <- b_Magdeburg 
+            a_centers <- c(a[i],a[k])  
+            if (length(unique(a_centers)) == 2)
+            { b <- kmeans(a, a_centers)
+              ii <- order(b$centers) 
+              write.table(rbind(c(c(i,k),b$centers[ii], unify_clusters(b$centers,b$cluster))), file = paste0(res_dir, "Magdeburg_cluster.txt"), row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+            }
+          }
+        }
+      }
+# special combination (Grings)
+#	Beetzendorf
+  a <- b_Beetzendorf
+  max_value <- max(a)
+  min_value <- min(a)
+  a_centers <- c(min_value,max_value)	# initial centers accorning biodata
+  if (length(unique(a_centers)) == 2)	# the centers must be different
+    { b <- kmeans(a, a_centers)		# Find clusters
+      ii <- order(b$centers) 
+# Store clusters into file 
+      write.table(rbind(c( c(0,0), b$centers[ii], unify_clusters(b$centers,b$cluster))), 
+      file = paste0(res_dir, "Beetzendorf_cluster.txt"), 
+      row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+    }
+#	Gadegast
+  a <- b_Gadegast
+  max_value <- max(a)
+  min_value <- min(a)
+  a_centers <- c(min_value,max_value)	# initial centers accorning biodata
+  if (length(unique(a_centers)) == 2)	# the centers must be different
+    { b <- kmeans(a, a_centers)		# Find clusters
+      ii <- order(b$centers) 
+# Store clusters into file 
+      write.table(rbind(c( c(0,0), b$centers[ii], unify_clusters(b$centers,b$cluster))), 
+      file = paste0(res_dir, "Gadegast_cluster.txt"), 
+      row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+    }
+#	Magdeburg
+  a <- b_Magdeburg
+  max_value <- max(a)
+  min_value <- min(a)
+  a_centers <- c(min_value,max_value)	# initial centers accorning biodata
+  if (length(unique(a_centers)) == 2)	# the centers must be different
+    { b <- kmeans(a, a_centers)		# Find clusters
+      ii <- order(b$centers) 
+# Store clusters into file 
+      write.table(rbind(c( c(0,0), b$centers[ii], unify_clusters(b$centers,b$cluster))), 
+      file = paste0(res_dir, "Magdeburg_cluster.txt"), 
+      row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+    }
+}	### end of make_clusters
+
+######## Dummies for cluster affiliation ###### according <res_dir>XXX_cluster.txt files #######
+# Stored in <res_dir>XXX_cluster_affiliation_barley.txt & <res_dir>XXX_cluster_affiliation_barley.txt files
+compose_dummies <- function(res_dir)	 
+{
+# Recall clustering information
+#	row structure: combination index (2), centers (2), cluster vector (nYears)
+  Beetzendorf_cluster <- read.table(paste0(res_dir, "Beetzendorf_cluster.txt"))
+  Gadegast_cluster <- read.table(paste0(res_dir, "Gadegast_cluster.txt"))
+  Magdeburg_cluster <- read.table(paste0(res_dir, "Magdeburg_cluster.txt"))
+
+  row_count = nrow(Beetzendorf_cluster)
+  skip_col = 4
+  first_col = skip_col + 1
+  last_col = ncol(Beetzendorf_cluster)
+  col_count = last_col - skip_col
+#merged_clusters <- c(Beetzendorf_cluster[,1:6],Gadegast_cluster[,4:6],Magdeburg_cluster[,4:6],Beetzendorf_cluster[,7:18],Gadegast_cluster[,7:18],Magdeburg_cluster[,7:18])
+
+# Remove the result files if any 
+  remove_files( c(paste0(res_dir, "Beetzendorf_cluster_affiliation_barley.txt"),
+                  paste0(res_dir, "Beetzendorf_cluster_affiliation_wheat.txt"),
+                  paste0(res_dir, "Beetzendorf_cluster_affiliation_both.txt"),
+                  paste0(res_dir, "Magdeburg_cluster_affiliation_barley.txt"),
+                  paste0(res_dir, "Magdeburg_cluster_affiliation_wheat.txt"),
+                  paste0(res_dir, "Magdeburg_cluster_affiliation_both.txt"),
+                  paste0(res_dir, "Gadegast_cluster_affiliation_barley.txt"),
+                  paste0(res_dir, "Gadegast_cluster_affiliation_wheat.txt"),
+                  paste0(res_dir, "Gadegast_cluster_affiliation_both.txt")))
+
+# Create empty matrices
+  Beetzendorf_cluster_affiliation <- matrix(0, nrow = row_count, ncol = col_count)
+  Magdeburg_cluster_affiliation <- matrix(0, nrow = row_count, ncol = col_count)
+  Gadegast_cluster_affiliation <- matrix(0, nrow = row_count, ncol = col_count)
+
+###Beetzendorf 
+  for (i in 1:row_count)
+  { for (j in first_col:last_col)
+     Beetzendorf_cluster_affiliation[i,j-skip_col] = if (Beetzendorf_cluster[i,j]==2) {1} else {0}
+  }
+  write.table(Beetzendorf_cluster_affiliation, file = paste0(res_dir, "Beetzendorf_cluster_affiliation_barley.txt"), 
+             row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+
+  for (i in 1:row_count)
+  { for (j in first_col:last_col)
+     Beetzendorf_cluster_affiliation[i,j-skip_col] = if (Beetzendorf_cluster[i,j]==3) {1} else {0}
+  }
+  write.table(Beetzendorf_cluster_affiliation, file = paste0(res_dir, "Beetzendorf_cluster_affiliation_wheat.txt"), 
+             row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+
+  for (i in 1:row_count)
+  { for (j in first_col:last_col)
+     Beetzendorf_cluster_affiliation[i,j-skip_col] = if (Beetzendorf_cluster[i,j]==1) {1} else {0}
+  }
+  write.table(Beetzendorf_cluster_affiliation, file = paste0(res_dir, "Beetzendorf_cluster_affiliation_both.txt"), 
+             row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+
+###Magdeburg
+  for (i in 1:row_count)
+  { for (j in first_col:last_col)
+     Magdeburg_cluster_affiliation[i,j-skip_col] = if (Magdeburg_cluster[i,j]==2) {1} else {0}
+  }
+  write.table(Magdeburg_cluster_affiliation, file = paste0(res_dir, "Magdeburg_cluster_affiliation_barley.txt"), 
+             row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+  
+  for (i in 1:row_count)
+  { for (j in first_col:last_col)
+     Magdeburg_cluster_affiliation[i,j-skip_col] = if (Magdeburg_cluster[i,j]==3) {1} else {0}
+  }
+  write.table(Magdeburg_cluster_affiliation, file = paste0(res_dir, "Magdeburg_cluster_affiliation_wheat.txt"), 
+             row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+  
+  for (i in 1:row_count)
+  { for (j in first_col:last_col)
+     Magdeburg_cluster_affiliation[i,j-skip_col] = if (Magdeburg_cluster[i,j]==1) {1} else {0}
+  }
+  write.table(Magdeburg_cluster_affiliation, file = paste0(res_dir, "Magdeburg_cluster_affiliation_both.txt"), 
+             row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+ 
+### Gadegast
+  for (i in 1:row_count)
+  { for (j in first_col:last_col)
+     Gadegast_cluster_affiliation[i,j-skip_col] = if (Gadegast_cluster[i,j]==2) {1} else {0}
+  }
+  write.table(Gadegast_cluster_affiliation, file = paste0(res_dir, "Gadegast_cluster_affiliation_barley.txt"), 
+             row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")  
+
+  for (i in 1:row_count)
+  { for (j in first_col:last_col)
+     Gadegast_cluster_affiliation[i,j-skip_col] = if (Gadegast_cluster[i,j]==3) {1} else {0}
+  }
+  write.table(Gadegast_cluster_affiliation, file = paste0(res_dir, "Gadegast_cluster_affiliation_wheat.txt"), 
+             row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+
+  for (i in 1:row_count)
+  { for (j in first_col:last_col)
+     Gadegast_cluster_affiliation[i,j-skip_col] = if (Gadegast_cluster[i,j]==1) {1} else {0}
+  }
+  write.table(Gadegast_cluster_affiliation, file = paste0(res_dir, "Gadegast_cluster_affiliation_both.txt"), 
+             row.name = FALSE, col.name = FALSE, append = TRUE, sep = "\t")
+}	### end of compose_dummies				
